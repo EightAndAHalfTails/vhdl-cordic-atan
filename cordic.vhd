@@ -18,7 +18,6 @@ entity cordic is
   end cordic;
     
 architecture arch of cordic is
-  signal d : std_logic;
   signal e : sfixed(-1 downto -24);
   
   type rom is array(0 to 23) of sfixed(-1 downto -24);
@@ -52,16 +51,16 @@ architecture arch of cordic is
     
     e <= angle_lookup(to_integer(unsigned(i)));
     
-    calculate : process(xin, yin, zin, e)
+    calculate : process(xin, yin, zin, e, i)
     begin
       if yin(31) = '1' then
         xout <= std_logic_vector(signed(xin) - shift_right(signed(yin), to_integer(unsigned(i))));
         yout <= std_logic_vector(signed(yin) + shift_right(signed(xin), to_integer(unsigned(i))));
-        zout <= std_logic_vector(to_sfixed(zin, 7, -24) - e);
+        zout <= std_logic_vector(resize(to_sfixed(zin, 8, -23) - e, 8, -23));
       else
         xout <= std_logic_vector(signed(xin) + shift_right(signed(yin), to_integer(unsigned(i))));
         yout <= std_logic_vector(signed(yin) - shift_right(signed(xin), to_integer(unsigned(i))));
-        zout <= std_logic_vector(to_sfixed(zin, 7, -24) + e);
+        zout <= std_logic_vector(resize(to_sfixed(zin, 8, -23) + e, 8, -23));
       end if;
     end process calculate;
 end arch;
