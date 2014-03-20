@@ -17,8 +17,7 @@ entity atan is
 architecture arch of atan is
   signal c_i : std_logic_vector(4 downto 0);
   signal c_xin, c_yin, c_zin, c_xout, c_yout, c_zout : std_logic_vector(31 downto 0);
-  variable step : integer := 0;
-
+  
 begin
   cor : entity cordic port map(
     i => c_i,
@@ -26,14 +25,14 @@ begin
     yin => c_yin,
     zin => c_zin,
     xout => c_xout,
-    yin => c_yout,
-    zin => c_zout
+    yout => c_yout,
+    zout => c_zout
   );
   
   aout <= c_zout;
-  c_i <= std_logic_vector(to_unsigned(step));
 
   next_step : process
+    variable step : integer := 0;
   begin
     wait until clk'event and clk='1';
     if reset = '1' then
@@ -43,17 +42,19 @@ begin
     elsif step = 23 then
       step := 0;
     else
-      c_i := step + 1;
+      step := step + 1;
     end if;
+    
+    c_i <= std_logic_vector(to_unsigned(step, 5));
   end process next_step;     
 
   input_registers : process
   begin
     wait until clk'event and clk = '1';
-    if step = 0 then
-      c_xin <= std_logic_vector(to_unsigned(1));
+    if to_integer(unsigned(c_i)) = 0 then
+      c_xin <= std_logic_vector(to_unsigned(1, 32));
       c_yin <= xin;
-      c_zin <= std_logic_vector(to_unsigned(0));
+      c_zin <= std_logic_vector(to_unsigned(0, 32));
     else
       c_xin <= c_xout;
       c_yin <= c_yout;
@@ -61,9 +62,9 @@ begin
     end if;
   end process input_registers;
 
-  if_done : process(step)
+  if_done : process(c_i)
   begin
-    if step = 23 then
+    if to_integer(unsigned(c_i)) = 23 then
       done <= '1';
     else
       done <= '0';
