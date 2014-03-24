@@ -9,14 +9,15 @@ entity atan is
     clk, reset, start : in std_logic;
     done : out std_logic;
     
-    xin : in std_logic_vector(31 downto 0);
-    aout : out std_logic_vector(31 downto 0)
+    xin : in sfixed(6 downto -25);
+    aout : out sfixed(1 downto -30)
     );
   end atan;
   
 architecture arch of atan is
-  signal c_i : std_logic_vector(4 downto 0);
-  signal c_xin, c_yin, c_zin, c_xout, c_yout, c_zout : std_logic_vector(31 downto 0);
+  signal c_i : unsigned(4 downto 0);
+  signal c_xin, c_yin, c_xout, c_yout : sfixed(6 downto -25);
+  signal c_zin, c_zout : sfixed(1 downto -30);
   
 begin
   cor : entity cordic port map(
@@ -32,29 +33,29 @@ begin
   aout <= c_zout;
 
   next_step : process
-    variable step : integer := 0;
+    variable step : integer := 31;
   begin
     wait until clk'event and clk='1';
     if reset = '1' then
+      step := 31;
+    elsif step = 31 and start = '1' then
       step := 0;
-    elsif step = 0 and start = '0' then
-      step := 0;
-    elsif step = 23 then
-      step := 0;
-    else
+    elsif step = 31 then
+      step := 31;
+    elsif step < 31 then
       step := step + 1;
     end if;
     
-    c_i <= std_logic_vector(to_unsigned(step, 5));
+    c_i <= to_unsigned(step, 5);
   end process next_step;     
 
   input_registers : process
   begin
     wait until clk'event and clk = '1';
-    if to_integer(unsigned(c_i)) = 0 then
-      c_xin <= std_logic_vector(to_unsigned(1, 32));
+    if to_integer(unsigned(c_i)) = 31 or reset = '1' then
+      c_xin <= to_sfixed(1, 6, -25);
       c_yin <= xin;
-      c_zin <= std_logic_vector(to_unsigned(0, 32));
+      c_zin <= to_sfixed(0, 1, -30);
     else
       c_xin <= c_xout;
       c_yin <= c_yout;
@@ -64,7 +65,7 @@ begin
 
   if_done : process(c_i)
   begin
-    if to_integer(unsigned(c_i)) = 23 then
+    if to_integer(unsigned(c_i)) = 31 then
       done <= '1';
     else
       done <= '0';
