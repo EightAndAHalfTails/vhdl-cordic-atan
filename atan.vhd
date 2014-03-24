@@ -3,72 +3,74 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.fixed_pkg.all;
 use work.cordic;
+use work.types.all;
 
 entity atan is
   port(
-    clk, reset, start : in std_logic;
-    done : out std_logic;
+    clk, reset : in std_logic;
     
-    xin : in sfixed(6 downto -25);
-    aout : out sfixed(1 downto -30)
+    xin : in t_length;
+    aout : out t_angle
     );
   end atan;
   
-architecture arch of atan is
-  signal c_i : unsigned(4 downto 0);
-  signal c_xin, c_yin, c_xout, c_yout : sfixed(6 downto -25);
-  signal c_zin, c_zout : sfixed(1 downto -30);
-  
+architecture unrolled of atan is
+  type arrxy is array(1 to precision-1) of t_length;
+  type arrz is array(1 to precision-1) of t_angle;
+  signal xins, xouts, yins, youts : arrxy;
+  signal zins, zouts : arrz;
 begin
-  cor : entity cordic port map(
-    i => c_i,
-    xin => c_xin,
-    yin => c_yin,
-    zin => c_zin,
-    xout => c_xout,
-    yout => c_yout,
-    zout => c_zout
-  );
-  
-  aout <= c_zout;
-
-  next_step : process
-    variable step : integer := 31;
-  begin
-    wait until clk'event and clk='1';
-    if reset = '1' then
-      step := 31;
-    elsif step = 31 and start = '1' then
-      step := 0;
-    elsif step = 31 then
-      step := 31;
-    elsif step < 31 then
-      step := step + 1;
-    end if;
+  gen: for I in 0 to precision-1 generate
+    first: if I = 0 generate
+      cor0 : entity cordic port map(
+        i => to_unsigned(0, log2_prec),
+        xin => to_sfixed(1, t_length'left, t_length'right),
+        yin => xin,
+        zin => to_sfixed(0, t_angle'left, t_angle'right),
+        xout => xouts(1),
+        yout => youts(1),
+        zout => zouts(1)
+      );
+    end generate first;
     
-    c_i <= to_unsigned(step, 5);
-  end process next_step;     
-
-  input_registers : process
+    middle: if I > 0 and I < precision-1 generate
+      corX : entity cordic port map(
+        i => to_unsigned(I, log2_prec),
+        xin => xins(I),
+        yin => yins(I),
+        zin => zins(I),
+        xout => xouts(I+1),
+        yout => youts(I+1),
+        zout => zouts(I+1)
+      );
+    end generate middle;
+    
+    last: if I = precision-1 generate
+      cor31 : entity cordic port map(
+        i => to_unsigned(precision-1, log2_prec),
+        xin => xins(precision-1),
+        yin => yins(precision-1),
+        zin => zins(precision-1),
+        --xout => ,
+        --yout => ,
+        zout => aout
+      );
+    end generate last;
+  end generate;
+  
+  clock: process
   begin
-    wait until clk'event and clk = '1';
-    if to_integer(unsigned(c_i)) = 31 or reset = '1' then
-      c_xin <= to_sfixed(1, 6, -25);
-      c_yin <= xin;
-      c_zin <= to_sfixed(0, 1, -30);
-    else
-      c_xin <= c_xout;
-      c_yin <= c_yout;
-      c_zin <= c_zout;
-    end if;
-  end process input_registers;
-
-  if_done : process(c_i)
-  begin
-    if to_integer(unsigned(c_i)) = 31 then
-      done <= '1';
-    else
-      done <= '0';
-    end if;
-  end process if_done;
-end arch;
+    wait until clk'event and clk ='1';
+    for I in 1 to precision-1 loop
+      if reset = '1' then
+        xins(I) <= to_sfixed(0, t_length'left, t_length'right);
+        yins(I) <= to_sfixed(0, t_length'left, t_length'right);
+        zins(I) <= to_sfixed(0, t_angle'left, t_angle'right);
+      else  
+        xins(I) <= xouts(I);
+        yins(I) <= youts(I);
+        zins(I) <= zouts(I);
+      end if;
+    end loop;
+  end process clock;
+end architecture unrolled;
