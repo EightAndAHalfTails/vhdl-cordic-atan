@@ -40,9 +40,16 @@ applicable agreement for further details.
 	(port
 		(pt 0 64)
 		(input)
+		(text "clk_en" (rect 0 0 25 12)(font "Arial" ))
+		(text "clk_en" (rect 21 59 46 71)(font "Arial" ))
+		(line (pt 0 64)(pt 16 64)(line_width 1))
+	)
+	(port
+		(pt 0 80)
+		(input)
 		(text "din[8..-23]" (rect 0 0 37 12)(font "Arial" ))
-		(text "din[8..-23]" (rect 21 59 58 71)(font "Arial" ))
-		(line (pt 0 64)(pt 16 64)(line_width 3))
+		(text "din[8..-23]" (rect 21 75 58 87)(font "Arial" ))
+		(line (pt 0 80)(pt 16 80)(line_width 3))
 	)
 	(port
 		(pt 184 32)
