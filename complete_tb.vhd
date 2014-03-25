@@ -41,15 +41,14 @@ begin
     din <= to_ufixed(0, din'left, din'right);
     wait until clk'event and clk = '1';
     reset <= '0';
-    for i in 0 to (255+32) loop
+    for i in 0 to (255000+latency) loop
       wait until clk'event and clk = '1';
-      if i <= 255 then
-        din <= to_ufixed(i, din'left, din'right);
+      if i <= 255000 then
+        din <= to_ufixed(real(i)/1000.0, din'left, din'right);
       end if;
       if i >= latency then
         obtained := to_real(aout);
-        correct := arctan(floor(real((i-latency)/4))-32.0);
-        assert abs(obtained - correct) < 0.000001 report "atan(floor(" & integer'image(i-latency) & "/4) -32) is " & real'image(obtained) & ". Correct answer is " & real'image(correct) severity warning;
+        correct := arctan(floor((real(i-latency)/1000.0)/4.0)-32.0);        assert abs(obtained - correct) < 0.000001 report "atan(floor(" & integer'image(i-latency) & "/4) -32) is " & real'image(obtained) & ". Correct answer is " & real'image(correct) & ". Error is " & real'image(abs(obtained-correct)/correct) severity warning;
       end if;
     end loop;
     assert false severity failure;
