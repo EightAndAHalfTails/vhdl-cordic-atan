@@ -21,7 +21,8 @@ begin
     clk => clk,
     reset => reset,
     din => din,
-    dout => aout
+    dout => aout,
+    clk_en => '1'
   );
   
   clkgen: process
