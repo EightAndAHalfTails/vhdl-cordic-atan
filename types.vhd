@@ -5,7 +5,7 @@ use IEEE.fixed_pkg.all;
 use ieee.math_real.all;
 
 package types is
-  constant precision: integer := 32;
+  constant precision: integer := 20;
   constant log2_prec: integer := integer(ceil(log2(real(precision))));
   
   subtype t_length is sfixed(6 downto (6-precision+1));
