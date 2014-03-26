@@ -13,6 +13,7 @@ architecture tb of complete_tb is
   signal clk, reset, start, done: std_logic;
   signal din : t_datain;
   signal aout: t_dataout;
+  signal s_din, s_aout: std_logic_vector(precision-1 downto 0);
   
   constant test_value: real := 20.0;
 begin
@@ -20,11 +21,14 @@ begin
   at: entity complete port map(
     clk => clk,
     reset => reset,
-    din => din,
-    dout => aout,
+    din => s_din,
+    dout => s_aout,
     clk_en => '1'
   );
   
+  
+  s_din <= to_slv(din);
+  aout <= t_dataout(s_aout);
   clkgen: process
   begin
     clk <= '0';

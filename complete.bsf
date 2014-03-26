@@ -47,15 +47,15 @@ applicable agreement for further details.
 	(port
 		(pt 0 80)
 		(input)
-		(text "din[8..-11]" (rect 0 0 35 12)(font "Arial" ))
-		(text "din[8..-11]" (rect 21 75 56 87)(font "Arial" ))
+		(text "din[19..0]" (rect 0 0 34 12)(font "Arial" ))
+		(text "din[19..0]" (rect 21 75 55 87)(font "Arial" ))
 		(line (pt 0 80)(pt 16 80)(line_width 3))
 	)
 	(port
 		(pt 176 32)
 		(output)
-		(text "dout[2..-17]" (rect 0 0 42 12)(font "Arial" ))
-		(text "dout[2..-17]" (rect 113 27 155 39)(font "Arial" ))
+		(text "dout[19..0]" (rect 0 0 40 12)(font "Arial" ))
+		(text "dout[19..0]" (rect 115 27 155 39)(font "Arial" ))
 		(line (pt 176 32)(pt 160 32)(line_width 3))
 	)
 	(drawing
